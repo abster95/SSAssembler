@@ -17,7 +17,7 @@ public:
 
 string SGetWord(string&);
 
-int IComputeExpr(string& sLine, map<string, Symbol*> *pSymMap, Symbol * &pSymReloc);
+int IComputeExpr(string& sLine, map<string, Symbol*> *pSymMap, string &sSymReloc);
 
 bool FUsesRegs(const string& str);
 

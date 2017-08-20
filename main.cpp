@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 	int iStartAddress = 0;
 	int iLocationCounter = 0;
 	Symbol *psymCurrSection = nullptr;
-	Symbol *pSymReloc;
+	string sSymReloc;
 	char rgchLine[LINELENGTH];
 
 	while (!ifs.eof()) {
@@ -73,14 +73,15 @@ int main(int argc, char* argv[]) {
 					for (int i = 0; i < it->second->m_cBytes; ++i) {
 						sWord = SGetWord(sLine);
 					}
-					if (FUsesRegs(sWord))
+					if (!FUsesRegs(sWord))
 						iLocationCounter += 4;
 				}
+				sLine = "";
 			}
 			// If it's ORG dircetive
 			//
 			else if ("ORG" == sWord) {
-				iStartAddress = IComputeExpr(sLine, pSymMap, pSymReloc);
+				iStartAddress = IComputeExpr(sLine, pSymMap, sSymReloc);
 				if (INT_MAX == iStartAddress)
 				{
 					cout << "ERROR: Bad expression format on line: " << Util::iCurrentFileLine << endl;
@@ -104,6 +105,7 @@ int main(int argc, char* argv[]) {
 					break;
 				case 'D':
 					cBytes = 4;
+					break;
 				default:
 					cBytes = 0;
 					break;
@@ -112,7 +114,7 @@ int main(int argc, char* argv[]) {
 				while ("" != (sWord = SGetWord(sLine))){
 					// Either the word after this is DUP or this is the value that should be written to this memory
 					//
-					int iAmount = IComputeExpr(sWord, pSymMap, pSymReloc);
+					int iAmount = IComputeExpr(sWord, pSymMap, sSymReloc);
 					if (FCheckDUP(sLine))
 					{
 						// The amount tells us how many bytes to leave here
@@ -131,13 +133,30 @@ int main(int argc, char* argv[]) {
 						iLocationCounter += cBytes;
 					}
 				}
+			} 
+			// If none of  code above executes then it should be symbol DEF expression
+			//
+			else
+			{
+				//  Symbol name is in our sWord, get the DEF keyword
+				//
+				if ("DEF" != SGetWord(sLine)){
+				
+					cout << "ERROR: Bad syntax! Line: "<< Util::iCurrentFileLine << std::endl;
+					exit(1);
+				}
+				int iValue = IComputeExpr(sLine, pSymMap, sSymReloc);
+				Symbol* pSymTemp = new Symbol(psymCurrSection->m_iSymbolId, iLocationCounter, iValue, 'L');
+				pSymTemp->m_pSymReloc = sSymReloc;
+				pSymMap->insert(pair<string, Symbol*>(sWord, pSymTemp));
+
 			}
 
 			// 
 
 		}
 		//at .end we've gone through everything we need
-		if (sWord == ".end") {
+		if (".end" == sWord) {
 			cout << "End of first pass!" << endl;
 			break;
 		}
@@ -146,10 +165,121 @@ int main(int argc, char* argv[]) {
 			cout << "ERROR: End of file reached before \".end\" found!" << std::endl;
 			exit(1);
 		}
-		if (Util::fHasErrors)
+	}
+	if (Util::fHasErrors)
+	{
+		cout << "File failed to compile due to errors" << endl;
+		exit(1);
+	}
+
+	psymCurrSection = nullptr;
+	sSymReloc = "";
+	iLocationCounter = 0;
+
+	ifs.clear();
+	ifs.seekg(0, ios::beg);
+	Util::iCurrentFileLine = 0;
+	map<string, Symbol*>::iterator itSymMap;
+
+	while (!ifs.eof())
+	{
+		ifs.getline(rgchLine, LINELENGTH);
+		string sLine(rgchLine);
+		++Util::iCurrentFileLine;
+		string sWord;
+		while ("" != sLine)
 		{
-			cout << "File failed to compile due to errors" << endl;
-			exit(1);
+			sWord = SGetWord(sLine);
+			if (".end" == sWord || "ORG" == sWord || ';' == sWord[0])
+				break;
+			if (".global" == sWord)
+			{
+				sWord = SGetWord(sLine);
+				while ("" != sWord){
+					if ((itSymMap = pSymMap->find(sWord)) != pSymMap->end())
+					{
+						itSymMap->second->m_chFlag = 'G';
+					}
+					else
+					{
+						cout << "ERROR: Unused symbol in .global" << endl;
+						exit(1);
+					}
+				}
+			}
+			// If .bss
+			else if (0 == sWord.find(".bss"))
+			{
+				// Skip if .bss section until next section
+				//
+				while (string::npos == sLine.find(".data") && string::npos != sLine.find(".text") && string::npos != sLine.find(".rodata"))
+				{
+					ifs.getline(rgchLine, LINELENGTH);
+					sLine = string(rgchLine);
+				}
+			}
+			// Section start
+			//
+			else if (string::npos == sWord.find(".data") && string::npos != sWord.find(".text") && string::npos != sWord.find(".rodata"))
+			{
+				psymCurrSection = pSymMap->find(sWord)->second;
+				iLocationCounter = psymCurrSection->m_iOffset;
+			}
+
+			else if ("DB" == sWord || "DW" == sWord || "DD" == sWord)
+			{
+				// Determine how many bytes to leave
+				//
+				int cBytes;
+				switch (sWord[1])
+				{
+				case 'B':
+					cBytes = 1;
+					break;
+				case 'W':
+					cBytes = 2;
+					break;
+				case 'D':
+					cBytes = 4;
+					break;
+				default:
+					cBytes = 0;
+					break;
+				}
+				while ("" != (sWord = SGetWord(sLine))){
+					// Either the word after this is DUP or this is the value that should be written to this memory
+					//
+					int iValue = IComputeExpr(sWord, pSymMap, sSymReloc);
+					int iCount = 1;
+					if (FCheckDUP(sLine))
+					{
+						// Get DUP
+						//
+						SGetWord(sLine);
+
+						iCount = iValue;
+
+						//The next word is what should be written to this memory
+						//
+						sWord = SGetWord(sLine);
+						iValue = IComputeExpr(sWord, pSymMap, sSymReloc);
+					}
+					if ("" != sSymReloc)
+					{
+						itSymMap = pSymMap->find(sSymReloc);
+						if (('$' == sSymReloc[0] && psymCurrSection->m_iOffset ==0) || (itSymMap != pSymMap->end() && ) )
+
+					}
+				}
+
+			}
+		}
+
+
+		if (".end" == sWord) {
+			cout << "End of first pass!" << endl;
+			break;
 		}
 	}
+	
 }

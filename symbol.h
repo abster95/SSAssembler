@@ -8,6 +8,7 @@ public:
 	int m_iOffset;
 	int m_iValue;
 	char m_chFlag;
+	string m_pSymReloc = "";
 
 	Symbol(int iSectionId, int iOffset, int iValue, char chFlag = 'L')
 		: m_iSectionId(iSectionId), m_iOffset(iOffset), m_iValue(iValue), m_chFlag(chFlag)

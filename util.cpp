@@ -24,6 +24,12 @@ string SGetWord(string& sLine)
 		sWord += sLine[i++]; //get the other '
 
 	}
+	else if ('[' == sLine[i])
+	{
+		while (']' != sLine[i])
+			sWord += sLine[i++];
+		sWord += sLine[i++];
+	}
 	else {
 		while (i < sLine.length() && !isspace(sLine[i]) && !(',' == sLine[i]) && !(';' == sLine[i])) {
 			sWord += sLine[i];
@@ -76,7 +82,7 @@ int IGetIntValue(const string& str)
 
 // Calculates expression
 //
-int IComputeExpr(string& sLine, map<string, Symbol*> * pSymMap, Symbol * &pSymReloc) {
+int IComputeExpr(string& sLine, map<string, Symbol*> * pSymMap, string &sSymReloc) {
 	stack<char> operators;
 	stack<int> values;
 
@@ -210,6 +216,9 @@ int IComputeExpr(string& sLine, map<string, Symbol*> * pSymMap, Symbol * &pSymRe
 			sLine = sLine.substr(i + 1, sLine.length());
 		}
 	}
+	// Make sure the line is empty
+	//
+	sLine = "";
 
 	// Turn it into a postfix
 	//
@@ -284,60 +293,60 @@ int IComputeExpr(string& sLine, map<string, Symbol*> * pSymMap, Symbol * &pSymRe
 	}
 
 
-	pSymReloc = nullptr;
+	sSymReloc = "";
 	map<string, Symbol*>::iterator it1;
 	map<string, Symbol*>::iterator it2;
 
 	// Substitute all values for symbols
 	// Assume that if two symbols susbstract they'll be in parenthasies
-	for (int i = 0; i < postfix.size(); ++i)
+	//
+	for (int i = postfix.size()-1; i >= 0; --i)
 	{
-		if ((it1 = pSymMap->find(postfix[i])) != pSymMap->end())
+		// If we're substracting
+		//
+		if ("-" == postfix[i] && i >= 2)
 		{
-			// Change the symbol to it's offset
-			//
-			postfix[i] = to_string(it1->second->m_iOffset);
-
-			// If the next one is also a symbol
-			//
-			if ((it2 = pSymMap->find(postfix[i + 1])) != pSymMap->end())
+			if ((it1 = pSymMap->find(postfix[i-1])) != pSymMap->end())
 			{
-				if (it1->second->m_iSectionId != it2->second->m_iSectionId)
-				{
-					cout << "ERROR: Trying to do arithmetic with symbols from different sections on line: " << Util::iCurrentFileLine << endl;
-					Util::fHasErrors = true;
-					return INT_MAX;
-				}
-				// Then they MUST substract in parenthasies
-				// This will ALWAYS be like S1S2- in postfix
+				// We're trying to substract a symbol from the rest of expression
+				// This is only possible if we're substracting from another symbol from the same section
+				// And so we get a constant
 				//
-				if (postfix[i + 2] == "-")
+				if ((it2 = pSymMap->find(postfix[i - 2])) != pSymMap->end())
 				{
-					postfix[i + 1] = to_string(it2->second->m_iOffset);
-					// Skip these since we've already done them
+					if (it1->second->m_iSectionId != it2->second->m_iSectionId)
+					{
+						cout << "ERROR: You're trying to substract two symbols from different sections! Line:" << Util::iCurrentFileLine << endl;
+						Util::fHasErrors = true;
+						return INT_MAX;
+					}
+					// This is OK state
 					//
-					i += 2;
+					postfix[i-1] = to_string(it1->second->m_iOffset);
+					postfix[i-2] = to_string(it2->second->m_iOffset);
+					i -= 2;
 				} else
 				{
 					cout << "ERROR: Did you forget to put 2 symbols in () before substracting them? Line:" << Util::iCurrentFileLine << endl;
 					Util::fHasErrors = true;
 					return INT_MAX;
 				}
+				
 			}
-			else
+		}
+		// We'll only hit this if a symbol is on its own, since the code above should handle when they're next to each other
+		//
+		else if ((it1 = pSymMap->find(postfix[i])) != pSymMap->end())
+		{
+			if ("" == sSymReloc)
 			{
-				// There's only going to be constants around this symbols, so it needs to be the relocative one
-				//
-				if (nullptr != pSymReloc)
-				{
-					pSymReloc = it1->second;
-				}
-				else
-				{
-					cout << "ERROR: There's more than one relocative symbol! Line: "<< Util::iCurrentFileLine << endl;
-					Util::fHasErrors = true;
-					return INT_MAX;
-				}
+				sSymReloc = it1->first;
+				postfix[i] = to_string(it1->second->m_iOffset);
+			} else
+			{
+				cout << "ERROR: There's more than one relocative symbol! Line: "<< Util::iCurrentFileLine << endl;
+				Util::fHasErrors = true;
+				return INT_MAX;
 			}
 		}
 	}
@@ -359,23 +368,23 @@ int IComputeExpr(string& sLine, map<string, Symbol*> * pSymMap, Symbol * &pSymRe
 
 			switch (postfix[i][0]){
 			case '+':
-				a += b;
+				b += a;
 				break;
 			case '-':
-				a -= b;
+				b -= a;
 				break;
 			case '*':
-				a *= b;
+				b *= a;
 				break;
 			case '/':
-				a /= b;
+				b /= a;
 				break;
 			default:
 				//ILLEGAL STATE
 				Util::fHasErrors = true;
 				break;
 			}
-			calculate.push(a);
+			calculate.push(b);
 		}
 	}
 
