@@ -12,7 +12,7 @@ public:
 	int m_iOffset;
 	int m_iValue;
 	char m_chFlag;
-	
+
 
 	vector<char> machineCode;
 	vector<CRelocTE*> reloc;

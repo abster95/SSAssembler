@@ -11,8 +11,7 @@ void CInstruction::InitializeMap()
 {
 	if (nullptr != s_pInstructionMap) {
 		s_pInstructionMap->clear();
-	}
-	else {
+	} else {
 		s_pInstructionMap = new map<string, CInstruction*>();
 	}
 

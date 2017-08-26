@@ -351,8 +351,8 @@ int main(int argc, char* argv[]) {
 								stmp += sWord[i];
 							}
 						} // if ('[' == sWord[0])
-						// RegDir
-						//
+						  // RegDir
+						  //
 						else {
 							stmp = sWord;
 						}
@@ -364,7 +364,7 @@ int main(int argc, char* argv[]) {
 						//
 						iLocationCounter += 4;
 						fHasSecondWord = true;
-						bool fDollarSign =  false;
+						bool fDollarSign = false;
 						if ('#' == sWord[0]) {
 							// Remove the character
 							//
@@ -382,11 +382,11 @@ int main(int argc, char* argv[]) {
 							// Get rid of the ']' and the '+'
 							//
 							if ('+' == sWord[i])
-								sWord = sWord.substr(i + 1, sWord.length()-2);
+								sWord = sWord.substr(i + 1, sWord.length() - 2);
 							// Leave the '-' in
 							//
 							else
-								sWord = sWord.substr(i, sWord.length()-2);
+								sWord = sWord.substr(i, sWord.length() - 2);
 						} // else if ('[' == sWord[0])
 						else if ('$' == sWord[0])
 						{
@@ -409,7 +409,7 @@ int main(int argc, char* argv[]) {
 								uiSecondWord -= 4;
 								// If it's not a dollar sign and sections mismatch it's relative reloc
 								//
-								if (!fDollarSign && itSymMap->second->m_iSectionId != psymCurrSection->m_iSymbolId)
+								if (fDollarSign && itSymMap->second->m_iSectionId != psymCurrSection->m_iSymbolId)
 								{
 									// If current section isn't ORG-ed or the symbol is global or symbol's section isn't ORG-ed
 									//
@@ -425,7 +425,7 @@ int main(int argc, char* argv[]) {
 										uiSecondWord -= iLocationCounter;
 										if ('G' == itSymMap->second->m_chFlag)
 											uiSecondWord += itSymMap->second->m_iOffset;
-									} 
+									}
 								} // if (!fDollarSign && itSymMap->second->m_iSectionId != psymCurrSection->m_iSymbolId)
 								else
 								{
@@ -464,7 +464,7 @@ int main(int argc, char* argv[]) {
 					sWord = SGetWord(sLine);
 					uiCode |= UiRegCode(sWord);
 				}
-				
+
 				uiCode <<= (21 - 5 * (itInstruct->second->m_cBytes ? itInstruct->second->m_cBytes : 1));
 				uiCode |= uiMode << 21;
 				uiCode |= uiType << 3;
@@ -485,7 +485,7 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 	}
-	
+
 	ofstream ofs(argv[2], ofstream::out);
 	if (!ofs.is_open())
 	{
@@ -496,7 +496,7 @@ int main(int argc, char* argv[]) {
 	ofs << "#TabelaSimbola" << endl;
 	for (itSymMap = pSymMap->begin(); itSymMap != pSymMap->end(); ++itSymMap)
 	{
-		if ('.' == itSymMap->first[0]){
+		if ('.' == itSymMap->first[0]) {
 			ofs << "SEG\t" << itSymMap->second->m_iSymbolId << "\t" << itSymMap->first << "\t" << itSymMap->second->m_iSectionId << "\t0x" << hex << itSymMap->second->m_iOffset;
 			ofs.unsetf(ios::hex);
 			ofs << "\t0x" << hex << itSymMap->second->m_iValue;
@@ -533,7 +533,7 @@ int main(int argc, char* argv[]) {
 	}
 	for (itSymMap = pSymMap->begin(); itSymMap != pSymMap->end(); ++itSymMap)
 	{
-		if ('.' == itSymMap->first[0])
+		if ('.' == itSymMap->first[0] && !(".bss" == itSymMap->first))
 		{
 			ofs.unsetf(ios::hex);
 			ofs << itSymMap->first << endl;

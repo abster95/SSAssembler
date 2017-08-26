@@ -6,7 +6,7 @@ using namespace std;
 
 class CInstruction {
 public:
-
+	
 	CInstruction(int iOpCode, int cBytes, bool fMemAccess);
 
 	static map<string, CInstruction*> *s_pInstructionMap;

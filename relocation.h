@@ -12,7 +12,7 @@ public:
 		int iOffset,
 		char chType,
 		int iSectionId
-		) : m_iOffset(iOffset), m_chType(chType), m_iSectionId(iSectionId) {};
+	) : m_iOffset(iOffset), m_chType(chType), m_iSectionId(iSectionId) {};
 	int m_iOffset;
 	char m_chType;
 	int m_iSectionId;

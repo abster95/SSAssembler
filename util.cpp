@@ -33,7 +33,7 @@ string SGetWord(string& sLine)
 	}
 	else {
 		while (i < sLine.length() && !isspace(sLine[i]) && !(',' == sLine[i]) && !(';' == sLine[i])) {
-				sWord += sLine[i++];
+			sWord += sLine[i++];
 		}
 	}
 	if (i < sLine.length()) {
@@ -145,7 +145,7 @@ int IComputeExpr(string& sLine, map<string, Symbol*> * pSymMap, string &sSymRelo
 		}
 		// If binary constant
 		//
-		else if (i+1 < sLine.length() && '0' == sLine[i] && 'b' == sLine[i + 1])
+		else if (i + 1 < sLine.length() && '0' == sLine[i] && 'b' == sLine[i + 1])
 		{
 			sWord += "0b";
 			i += 2;
@@ -487,7 +487,7 @@ void WriteMachineCode(int iValue, int iSize, vector<char>* vch, bool fLittleEndi
 		{
 			vch->push_back((iValue >> (i * 8)) & MASK);
 		}
-		
+
 	}
 	else
 	{
