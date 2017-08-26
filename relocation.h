@@ -6,7 +6,7 @@
 //Represents an element of the relocation table
 //hungarian: rte
 
-class CRelocTE{
+class CRelocTE {
 public:
 	CRelocTE(
 		int iOffset,
@@ -14,21 +14,19 @@ public:
 		int iSectionId
 		) : m_iOffset(iOffset), m_chType(chType), m_iSectionId(iSectionId) {};
 
-	__forceinline int IOfsset(){
+	__forceinline int IOfsset() {
 		return m_iOffset;
 	}
 
-	__forceinline char ChType(){
+	__forceinline char ChType() {
 		return m_chType;
 	}
 
-	__forceinline int ISectionId(){
+	__forceinline int ISectionId() {
 		return m_iSectionId;
 	}
 
 
-
-private:
 	int m_iOffset;
 	char m_chType;
 	int m_iSectionId;

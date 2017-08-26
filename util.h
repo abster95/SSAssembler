@@ -17,10 +17,14 @@ public:
 
 string SGetWord(string&);
 
-int IComputeExpr(string& sLine, map<string, Symbol*> *pSymMap, string &sSymReloc);
+int IComputeExpr(string& sLine, map<string, Symbol*> *pSymMap, string &sSymReloc, int iLocationCounter);
 
 bool FUsesRegs(const string& str);
 
 int IGetIntValue(const string& str);
 
 bool FCheckDUP(const string& str);
+
+unsigned int UiRegCode(string sWord);
+
+void WriteMachineCode(int iValue, int iSize, vector<char>* vch, bool fLittleEndian);
