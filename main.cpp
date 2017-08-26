@@ -5,7 +5,7 @@
 #include <vector>
 #include "instruction.h"
 #include "symbol.h"
-#include "Util.h"
+#include "util.h"
 using namespace std;
 
 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 
-	ifstream ifs = ifstream(argv[1], ifstream::in);
+	ifstream ifs(argv[1], ifstream::in);
 	if (!ifs.is_open()) {
 		cout << "Can't read input file!" << endl;
 		exit(1);
@@ -486,8 +486,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	ifs.close();
-	ofstream ofs = ofstream(argv[2], ofstream::out);
+	ofstream ofs(argv[2], ofstream::out);
 	if (!ofs.is_open())
 	{
 		cout << "ERROR: Can't open output file" << endl;

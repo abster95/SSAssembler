@@ -52,7 +52,7 @@ string SGetWord(string& sLine)
 
 int IGetIntValue(const string& str)
 {
-	int iRet = INT_MAX;
+	int iRet = 0;
 	if ('0' == str[0] && 'x' == str[1])
 	{
 

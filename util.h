@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <climits>
 #include "symbol.h"
 #include <map>
 using namespace std;
